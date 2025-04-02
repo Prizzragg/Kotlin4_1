@@ -1,24 +1,29 @@
 data class Comments(
-    val canPost: Boolean,
-    val groupsCanPost: Boolean,
-    val canClose: Boolean,
-    val canOpen: Boolean,
+    val canPost: Boolean = true,
+    val groupsCanPost: Boolean = true,
+    val canClose: Boolean = true,
+    val canOpen: Boolean = true,
     val count: Int = 0,
 )
 
-data class Likes(val userLikes: Boolean, val canLike: Boolean, val canPublish: Boolean, val count: Int = 0)
+data class Likes(
+    val userLikes: Boolean = true,
+    val canLike: Boolean = true,
+    val canPublish: Boolean = true,
+    val count: Int = 0
+)
 
 data class Post(
     var id: Int,
-    var ownerId: Int,
-    val fromId: Int,
-    val createdBy: Int,
-    val date: Int,
-    val text: String,
-    val replyOwnerId: Int,
-    val friendsOnly: Boolean,
     val comments: Comments,
-    val likes: Likes
+    val likes: Likes,
+    val ownerId: Int = 134,
+    val fromId: Int = 122,
+    val createdBy: Int = 133,
+    val date: Int = 2042025,
+    val text: String = "TEXT",
+    val replyOwnerId: Int = 223,
+    val friendsOnly: Boolean = true,
 )
 
 object WallService {
@@ -31,9 +36,9 @@ object WallService {
     }
 
     fun update(post: Post): Boolean {
-        for (postsInArray in posts) {
-            if (post.id == postsInArray.id) {
-                posts[postsInArray.id - 1] = post.copy(id = postsInArray.id)
+        for ((index) in posts.withIndex()) {
+            if (post.id == index + 1) {
+                posts[index] = post.copy(id = index + 1)
                 return true
             }
         }

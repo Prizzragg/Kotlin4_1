@@ -13,20 +13,9 @@ class WallServiceTest {
     @Test
     fun add() {
         val service = WallService
-        val comments = Comments(canPost = true, groupsCanPost = false, canClose = false, canOpen = false)
-        val likes = Likes(userLikes = true, canLike = true, canPublish = true)
-        val post1 = Post(
-            0,
-            33,
-            345,
-            22,
-            2042025,
-            "TEXT",
-            123,
-            false,
-            comments,
-            likes
-        )
+        val comments = Comments()
+        val likes = Likes()
+        val post1 = Post(0, comments, likes)
         val result = service.add(post1)
         assertEquals(1, result.id)
     }
@@ -34,22 +23,11 @@ class WallServiceTest {
     @Test
     fun updateTrue() {
         val service = WallService
-        val comments = Comments(canPost = true, groupsCanPost = false, canClose = false, canOpen = false)
-        val likes = Likes(userLikes = true, canLike = true, canPublish = true)
-        val post1 = Post(
-            22,
-            33,
-            345,
-            22,
-            2042025,
-            "TEXT",
-            123,
-            false,
-            comments,
-            likes
-        )
+        val comments = Comments()
+        val likes = Likes()
+        val post1 = Post(22, comments, likes)
         service.add(post1)
-        val post2 = Post(1, 221, 345, 22, 2042025, "TEXT", 123, false, comments, likes)
+        val post2 = Post(1, comments, likes)
         val result = service.update(post2)
         assertEquals(true, result)
     }
@@ -57,33 +35,11 @@ class WallServiceTest {
     @Test
     fun updateFalse() {
         val service = WallService
-        val comments = Comments(canPost = true, groupsCanPost = false, canClose = false, canOpen = false)
-        val likes = Likes(userLikes = true, canLike = true, canPublish = true)
-        val post1 = Post(
-            0,
-            33,
-            345,
-            22,
-            2042025,
-            "TEXT",
-            123,
-            false,
-            comments,
-            likes
-        )
+        val comments = Comments()
+        val likes = Likes()
+        val post1 = Post(0, comments, likes)
         service.add(post1)
-        val post2 = Post(
-            222,
-            221,
-            345,
-            22,
-            2042025,
-            "TEXT",
-            123,
-            false,
-            comments,
-            likes
-        )
+        val post2 = Post(222, comments, likes)
         val result = service.update(post2)
         assertFalse(result)
     }
