@@ -53,5 +53,5 @@ object WallService {
 }
 
 fun main() {
-    
+
 }
