@@ -16,10 +16,11 @@ data class Likes(
 data class Post(
     var id: Int,
     val comments: Comments,
-    val likes: Likes,
-    val ownerId: Int = 134,
-    val fromId: Int = 122,
-    val createdBy: Int = 133,
+    val likes: Likes?,
+    val ownerId: Int?,
+    val fromId: Int?,
+    val attachment: Array<Attachment>,
+    val createdBy: Int = 233,
     val date: Int = 2042025,
     val text: String = "TEXT",
     val replyOwnerId: Int = 223,
@@ -52,4 +53,5 @@ object WallService {
 }
 
 fun main() {
+
 }
