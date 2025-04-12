@@ -138,10 +138,33 @@ class WallServiceTest {
     }
 
     @Test(expected = ReasonNotFoundException::class)
-    fun reportCommentWithReasonException() {
+    fun reportCommentWithMoreReasonException() {
         val service = WallService
         val commentsPost = Comments()
         val reportComment = ReportComments(1, 1, 9)
+        val comment = Comment(
+            1,
+            5,
+            12042025,
+            "text",
+            null,
+            1,
+            1,
+            null,
+            null,
+            null
+        )
+        val post = Post(122, commentsPost, null, 643, 912, null)
+        service.add(post)
+        service.createComment(1, comment)
+        service.reportComment(reportComment)
+    }
+
+    @Test(expected = ReasonNotFoundException::class)
+    fun reportCommentWithLessReasonException() {
+        val service = WallService
+        val commentsPost = Comments()
+        val reportComment = ReportComments(1, 1, -1)
         val comment = Comment(
             1,
             5,
