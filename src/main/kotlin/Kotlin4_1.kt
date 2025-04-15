@@ -138,7 +138,11 @@ object WallService {
         for ((index) in notes.withIndex()) {
             if (id == notes[index].id) {
                 notes.removeAt(index)
-                notesDeleteComment(id)
+                try {
+                    notesDeleteComment(id)
+                } catch (e:CommentNoteNotFoundException) {
+                    println("Comment for Note $id not found")
+                }
                 return true
             }
         }
