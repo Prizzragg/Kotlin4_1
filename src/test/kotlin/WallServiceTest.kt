@@ -362,4 +362,206 @@ class WallServiceTest {
         service.notesDeleteComment(2)
         service.notesRestoreComment(4)
     }
+
+    @Test
+    fun addDirectMessageTrue() {
+        val service = WallService
+        val result = service.addDirectMessages(1)
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun addDirectMessageFalse() {
+        val service = WallService
+        service.addDirectMessages(1)
+        val result = service.addDirectMessages(1)
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun deleteDirectMessagesTrue() {
+        val service = WallService
+        service.addDirectMessages(1)
+        val result = service.deleteDirectMessages(1)
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun deleteDirectMessagesFalse() {
+        val service = WallService
+        service.addDirectMessages(1)
+        val result = service.deleteDirectMessages(2)
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun getDirectMessages() {
+        val service = WallService
+        val directMessagesExpect = mutableListOf(DirectMessages(1, mutableListOf(), mutableListOf()))
+        service.addDirectMessages(1)
+        val result = service.getDirectMessages()
+        assertEquals(directMessagesExpect, result)
+    }
+
+    @Test
+    fun addMessageNew() {
+        val service = WallService
+        val result = service.addMessage(1, "Hello")
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun addMessageOld() {
+        val service = WallService
+        service.addDirectMessages(1)
+        service.addDirectMessages(2)
+        val result = service.addMessage(2, "Hello")
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun deleteNotCheckedMessage() {
+        val service = WallService
+        service.addMessage(1, "Hello")
+        service.addMessage(1, "Cool")
+        val result = service.deleteNotCheckedMessage(1, 2)
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun deleteNotCheckedMessageNotFoundCompanion() {
+        val service = WallService
+        service.addMessage(1, "Hello")
+        val result = service.deleteNotCheckedMessage(2, 1)
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun deleteNotCheckedMessageNotFoundMessage() {
+        val service = WallService
+        service.addMessage(1, "Hello")
+        val result = service.deleteNotCheckedMessage(1, 2)
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun editNotCheckedMessage() {
+        val service = WallService
+        service.addMessage(1, "Hello")
+        val result = service.editNotCheckedMessage(1, 1, "Privet")
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun editNotCheckedMessageNotFoundCompanion() {
+        val service = WallService
+        service.addMessage(1, "Hello")
+        val result = service.editNotCheckedMessage(2, 1, "Privet")
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun editNotCheckedMessageNotFoundMessage() {
+        val service = WallService
+        service.addMessage(1, "Hello")
+        val result = service.editNotCheckedMessage(1, 2, "Privet")
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun getUnreadChatsCount() {
+        val service = WallService
+        service.addMessage(1, "Hello")
+        service.addMessage(2, "Privet")
+        val result = service.getUnreadChatsCount()
+        assertEquals(2, result)
+    }
+
+    @Test
+    fun getListOfRecentMessages() {
+        val service = WallService
+        val expectMessage = mutableListOf("Hello", "Privet")
+        service.addMessage(1, "Hello")
+        service.addMessage(2, "Privet")
+        val result = service.getListOfRecentMessages()
+        assertEquals(expectMessage, result)
+    }
+
+    @Test
+    fun getListFromChat() {
+        val service = WallService
+        val expectMessage = mutableListOf("Hello", "Privet")
+        service.addMessage(1, "Privet")
+        service.addMessage(1, "Hello")
+        val result = service.getListFromChat(1, 2)
+        assertEquals(expectMessage, result)
+    }
+
+    @Test
+    fun getListFromChatEmpty() {
+        val service = WallService
+        val expectMessage = mutableListOf<String>()
+        val result = service.getListFromChat(1, 5)
+        assertEquals(expectMessage, result)
+    }
+
+    @Test
+    fun deleteCheckedMessage() {
+        val service = WallService
+        service.addMessage(1, "Privet")
+        service.addMessage(1, "Hello")
+        service.getListFromChat(1, 1)
+        val result = service.deleteCheckedMessage(1, 1)
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun deleteCheckedMessageNotFoundCompanion() {
+        val service = WallService
+        service.addMessage(1, "Privet")
+        service.addMessage(1, "Hello")
+        service.getListFromChat(1, 1)
+        val result = service.deleteCheckedMessage(2, 1)
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun deleteCheckedMessageNotFoundMessage() {
+        val service = WallService
+        service.addMessage(1, "Privet")
+        service.addMessage(1, "Hello")
+        service.getListFromChat(1, 1)
+        val result = service.deleteCheckedMessage(1, 3)
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun editCheckedMessage() {
+        val service = WallService
+        service.addMessage(1, "Privet")
+        service.addMessage(1, "Hello")
+        service.getListFromChat(1, 1)
+        val result = service.editCheckedMessage(1, 1, "Salam")
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun editCheckedMessageNotFoundCompanion() {
+        val service = WallService
+        service.addMessage(1, "Privet")
+        service.addMessage(1, "Hello")
+        service.getListFromChat(1, 1)
+        val result = service.editCheckedMessage(2, 1, "Salam")
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun editCheckedMessageNotFoundMessage() {
+        val service = WallService
+        service.addMessage(1, "Privet")
+        service.addMessage(1, "Hello")
+        service.getListFromChat(1, 1)
+        val result = service.editCheckedMessage(1, 2, "Salam")
+        assertEquals(false, result)
+    }
 }
