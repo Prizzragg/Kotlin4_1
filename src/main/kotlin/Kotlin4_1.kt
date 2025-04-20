@@ -211,49 +211,59 @@ object WallService {
         return result
     }
 
-    fun getListFromChat(idCompanion: Int, countMessage: Int): MutableList<String> {
-        val result = mutableListOf<String>()
+    fun getListFromChat(idCompanion: Int, countMessage: Int): MutableList<Message> {
+        val result = mutableListOf<Message>()
         val setCheckedMessage = mutableListOf<Message>()
         val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
         if (filteredMessages.isEmpty()) {
             println("Direct message not found with $idCompanion")
             return result
         }
-        if (filteredMessages[0].notCheckedMessage.count() >= countMessage) {
-            var numberMessageCount = 1
-            while (result.count() < countMessage) {
-                val messageFromChat = filteredMessages[0].notCheckedMessage.last()
-                messageFromChat.messageNumber = numberMessageCount
-                result += messageFromChat.message
-                setCheckedMessage += messageFromChat
-                filteredMessages[0].notCheckedMessage.remove(messageFromChat)
-                numberMessageCount++
-            }
-            filteredMessages[0].checkedMessage += setCheckedMessage
+        if ((filteredMessages[0].checkedMessage.isEmpty()) && filteredMessages[0].notCheckedMessage.isEmpty()) {
+            print("Сообщений нет")
             return result
         }
-        val numberMessageCount = filteredMessages[0].checkedMessage.count()
-        while (filteredMessages[0].notCheckedMessage.isNotEmpty()) {
-            val messageFromChat = filteredMessages[0].notCheckedMessage.last()
-            messageFromChat.messageNumber = numberMessageCount + 1
-            result += messageFromChat.message
-            setCheckedMessage += messageFromChat
-            filteredMessages[0].notCheckedMessage.remove(messageFromChat)
+        if (filteredMessages[0].notCheckedMessage.count() >= countMessage) {
+            val notCheckedMessageDrop =
+                filteredMessages[0].notCheckedMessage.drop(filteredMessages[0].notCheckedMessage.count() - countMessage)
+            val notCheckedMessageDropMutable = notCheckedMessageDrop.toMutableList()
+            setCheckedMessage += notCheckedMessageDropMutable
+            directMessages[directMessages.indexOf(filteredMessages[0])].checkedMessage.addAll(setCheckedMessage)
+            directMessages[directMessages.indexOf(filteredMessages[0])].notCheckedMessage.removeAll(setCheckedMessage)
+            result += notCheckedMessageDropMutable
+            return result
         }
-        while (result.count() < countMessage) {
-            if (filteredMessages[0].checkedMessage.isEmpty()) {
-                println("Больше сообщений нет")
-                break
+        if (filteredMessages[0].notCheckedMessage.isEmpty()) {
+            try {
+                if (filteredMessages[0].checkedMessage.count() <= countMessage) {
+                    val checkedMessageDrop =
+                        filteredMessages[0].checkedMessage.drop(filteredMessages[0].checkedMessage.count() - countMessage)
+                    val checkedMessageDropMutable = checkedMessageDrop.toMutableList()
+                    result += checkedMessageDropMutable
+                    return result
+                }
+            } catch (e: IllegalArgumentException) {
+                result += filteredMessages[0].checkedMessage
+                println("Доступно только ${result.count()} сообщений")
+                return result
             }
-            val messageFromChat = filteredMessages[0].checkedMessage.last()
-            result += messageFromChat.message
-            filteredMessages[0].checkedMessage.remove(messageFromChat)
         }
-        filteredMessages[0].checkedMessage += setCheckedMessage
-        if (result.isEmpty()) {
-            print("Сообщений нет")
+        directMessages[directMessages.indexOf(filteredMessages[0])].checkedMessage.addAll(
+            (filteredMessages[0].checkedMessage.count() - 1),
+            (filteredMessages[0]).notCheckedMessage
+        )
+        directMessages[directMessages.indexOf(filteredMessages[0])].notCheckedMessage.clear()
+        try {
+            val checkedMessageDrop =
+                filteredMessages[0].checkedMessage.drop(filteredMessages[0].checkedMessage.count() - countMessage)
+            val checkedMessageDropMutable = checkedMessageDrop.toMutableList()
+            result += checkedMessageDropMutable
+            return result
+        } catch (e: IllegalArgumentException) {
+            result += filteredMessages[0].checkedMessage
+            println("Доступно только ${result.count()} сообщений")
+            return result
         }
-        return result
     }
 
     fun add(post: Post): Post {

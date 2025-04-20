@@ -490,9 +490,12 @@ class WallServiceTest {
     @Test
     fun getListFromChat() {
         val service = WallService
-        val expectMessage = mutableListOf("Hello", "Privet")
+        val message1 = Message(1, 1, "Privet")
+        val message2 = Message(1, 2, "Hello")
+        val expectMessage = mutableListOf(message1, message2)
         service.addMessage(1, "Privet")
         service.addMessage(1, "Hello")
+        service.getListFromChat(1, 1)
         val result = service.getListFromChat(1, 2)
         assertEquals(expectMessage, result)
     }
@@ -511,7 +514,7 @@ class WallServiceTest {
         service.addMessage(1, "Privet")
         service.addMessage(1, "Hello")
         service.getListFromChat(1, 1)
-        val result = service.deleteCheckedMessage(1, 1)
+        val result = service.deleteCheckedMessage(1, 2)
         assertEquals(true, result)
     }
 
@@ -541,7 +544,7 @@ class WallServiceTest {
         service.addMessage(1, "Privet")
         service.addMessage(1, "Hello")
         service.getListFromChat(1, 1)
-        val result = service.editCheckedMessage(1, 1, "Salam")
+        val result = service.editCheckedMessage(1, 2, "Salam")
         assertEquals(true, result)
     }
 
@@ -561,7 +564,7 @@ class WallServiceTest {
         service.addMessage(1, "Privet")
         service.addMessage(1, "Hello")
         service.getListFromChat(1, 1)
-        val result = service.editCheckedMessage(1, 2, "Salam")
+        val result = service.editCheckedMessage(1, 1, "Salam")
         assertEquals(false, result)
     }
 }
