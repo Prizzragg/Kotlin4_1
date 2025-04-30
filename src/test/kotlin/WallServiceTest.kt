@@ -387,7 +387,7 @@ class WallServiceTest {
     }
 
     @Test
-    fun deleteDirectMessagesFalse() {
+    fun deleteDirectMessagesNotFoundCompanion() {
         val service = WallService
         service.addDirectMessages(1)
         val result = service.deleteDirectMessages(2)
@@ -397,7 +397,7 @@ class WallServiceTest {
     @Test
     fun getDirectMessages() {
         val service = WallService
-        val directMessagesExpect = mutableListOf(DirectMessages(1, mutableListOf(), mutableListOf()))
+        val directMessagesExpect = mutableListOf(DirectMessages(1, mutableListOf()))
         service.addDirectMessages(1)
         val result = service.getDirectMessages()
         assertEquals(directMessagesExpect, result)
@@ -420,52 +420,48 @@ class WallServiceTest {
     }
 
     @Test
-    fun deleteNotCheckedMessage() {
+    fun deleteMessageTrue() {
         val service = WallService
         service.addMessage(1, "Hello")
         service.addMessage(1, "Cool")
-        val result = service.deleteNotCheckedMessage(1, 2)
+        val result = service.deleteMessage(1, 2)
         assertEquals(true, result)
     }
 
-    @Test
-    fun deleteNotCheckedMessageNotFoundCompanion() {
+    @Test(expected = DirectMessageNotFoundException::class)
+    fun deleteNotFoundCompanion() {
         val service = WallService
         service.addMessage(1, "Hello")
-        val result = service.deleteNotCheckedMessage(2, 1)
-        assertEquals(false, result)
+        service.deleteMessage(2, 1)
+    }
+
+    @Test(expected = MessageNotFoundException::class)
+    fun deleteNotFoundMessage() {
+        val service = WallService
+        service.addMessage(1, "Hello")
+        service.deleteMessage(1, 2)
     }
 
     @Test
-    fun deleteNotCheckedMessageNotFoundMessage() {
+    fun editMessage() {
         val service = WallService
         service.addMessage(1, "Hello")
-        val result = service.deleteNotCheckedMessage(1, 2)
-        assertEquals(false, result)
-    }
-
-    @Test
-    fun editNotCheckedMessage() {
-        val service = WallService
-        service.addMessage(1, "Hello")
-        val result = service.editNotCheckedMessage(1, 1, "Privet")
+        val result = service.editMessage(1, 1, "Privet")
         assertEquals(true, result)
     }
 
-    @Test
-    fun editNotCheckedMessageNotFoundCompanion() {
+    @Test(expected = DirectMessageNotFoundException::class)
+    fun editNotFoundCompanion() {
         val service = WallService
         service.addMessage(1, "Hello")
-        val result = service.editNotCheckedMessage(2, 1, "Privet")
-        assertEquals(false, result)
+        service.editMessage(2, 1, "Privet")
     }
 
-    @Test
-    fun editNotCheckedMessageNotFoundMessage() {
+    @Test(expected = MessageNotFoundException::class)
+    fun editNotFoundMessage() {
         val service = WallService
         service.addMessage(1, "Hello")
-        val result = service.editNotCheckedMessage(1, 2, "Privet")
-        assertEquals(false, result)
+        val result = service.editMessage(1, 2, "Privet")
     }
 
     @Test
@@ -490,12 +486,11 @@ class WallServiceTest {
     @Test
     fun getListFromChat() {
         val service = WallService
-        val message1 = Message(1, 1, "Privet")
-        val message2 = Message(1, 2, "Hello")
+        val message1 = Message(1, 1, "Privet", false)
+        val message2 = Message(1, 2, "Hello", false)
         val expectMessage = mutableListOf(message1, message2)
         service.addMessage(1, "Privet")
         service.addMessage(1, "Hello")
-        service.getListFromChat(1, 1)
         val result = service.getListFromChat(1, 2)
         assertEquals(expectMessage, result)
     }
@@ -503,68 +498,42 @@ class WallServiceTest {
     @Test
     fun getListFromChatEmpty() {
         val service = WallService
+        service.addDirectMessages(1)
         val expectMessage = mutableListOf<String>()
         val result = service.getListFromChat(1, 5)
         assertEquals(expectMessage, result)
     }
 
+    @Test(expected = DirectMessageNotFoundException::class)
+    fun getListFromChatNotFoundCompanion() {
+        val service = WallService
+        service.addDirectMessages(1)
+        service.getListFromChat(2, 1)
+    }
+
     @Test
-    fun deleteCheckedMessage() {
+    fun deleteMessage() {
         val service = WallService
         service.addMessage(1, "Privet")
         service.addMessage(1, "Hello")
-        service.getListFromChat(1, 1)
-        val result = service.deleteCheckedMessage(1, 2)
+        val result = service.deleteMessage(1, 2)
         assertEquals(true, result)
     }
 
-    @Test
-    fun deleteCheckedMessageNotFoundCompanion() {
+    @Test(expected = DirectMessageNotFoundException::class)
+    fun deleteMessageNotFoundCompanion() {
         val service = WallService
         service.addMessage(1, "Privet")
         service.addMessage(1, "Hello")
-        service.getListFromChat(1, 1)
-        val result = service.deleteCheckedMessage(2, 1)
-        assertEquals(false, result)
+        service.deleteMessage(2, 1)
     }
 
-    @Test
-    fun deleteCheckedMessageNotFoundMessage() {
+    @Test(expected = MessageNotFoundException::class)
+    fun deleteMessageNotFoundMessage() {
         val service = WallService
         service.addMessage(1, "Privet")
         service.addMessage(1, "Hello")
-        service.getListFromChat(1, 1)
-        val result = service.deleteCheckedMessage(1, 3)
-        assertEquals(false, result)
+        service.deleteMessage(1, 3)
     }
 
-    @Test
-    fun editCheckedMessage() {
-        val service = WallService
-        service.addMessage(1, "Privet")
-        service.addMessage(1, "Hello")
-        service.getListFromChat(1, 1)
-        val result = service.editCheckedMessage(1, 2, "Salam")
-        assertEquals(true, result)
-    }
-
-    @Test
-    fun editCheckedMessageNotFoundCompanion() {
-        val service = WallService
-        service.addMessage(1, "Privet")
-        service.addMessage(1, "Hello")
-        service.getListFromChat(1, 1)
-        val result = service.editCheckedMessage(2, 1, "Salam")
-        assertEquals(false, result)
-    }
-
-    @Test
-    fun editCheckedMessageNotFoundMessage() {
-        val service = WallService
-        service.addMessage(1, "Privet")
-        service.addMessage(1, "Hello")
-        service.getListFromChat(1, 1)
-        val result = service.editCheckedMessage(1, 1, "Salam")
-        assertEquals(false, result)
-    }
 }
