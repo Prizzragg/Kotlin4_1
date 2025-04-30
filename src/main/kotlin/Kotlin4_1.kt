@@ -3,13 +3,14 @@ class CommentNotFoundException(message: String) : RuntimeException(message)
 class ReasonNotFoundException(message: String) : RuntimeException(message)
 class NoteNotFoundException(message: String) : RuntimeException(message)
 class CommentNoteNotFoundException(message: String) : RuntimeException(message)
+class DirectMessageNotFoundException(message: String) : RuntimeException(message)
+class MessageNotFoundException(message: String) : RuntimeException(message)
 
-data class Message(val idCompanion: Int, var messageNumber: Int, val message: String)
+data class Message(val idCompanion: Int, var messageNumber: Int, val message: String, var isChecked: Boolean)
 
 data class DirectMessages(
     val idCompanion: Int,
-    val checkedMessage: MutableList<Message>,
-    val notCheckedMessage: MutableList<Message>
+    val message: MutableList<Message>,
 )
 
 data class Note(val id: Int, val title: String, val text: String, val date: String)
@@ -78,9 +79,9 @@ object WallService {
     private var directMessages: MutableList<DirectMessages> = mutableListOf()
 
     fun addDirectMessages(idCompanion: Int): Boolean {
-        val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
-        if (filteredMessages.isEmpty()) {
-            directMessages.add(DirectMessages(idCompanion, mutableListOf(), mutableListOf()))
+        val filteredDirectMessages = directMessages.filter { it.idCompanion == idCompanion }
+        if (filteredDirectMessages.isEmpty()) {
+            directMessages.add(DirectMessages(idCompanion, mutableListOf()))
             return true
         }
         println("Direct Messages already created")
@@ -90,7 +91,8 @@ object WallService {
     fun deleteDirectMessages(idCompanion: Int): Boolean {
         val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
         if (filteredMessages.isNotEmpty()) {
-            directMessages.filter { it.idCompanion != idCompanion }
+            val indexFilteredMessage = directMessages.indexOf(filteredMessages[0])
+            directMessages.removeAt(indexFilteredMessage)
             return true
         }
         println("Direct Message not found with $idCompanion")
@@ -104,166 +106,100 @@ object WallService {
     fun addMessage(idCompanion: Int, message: String): Boolean {
         val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
         if (filteredMessages.isEmpty()) {
-            addDirectMessages(idCompanion)
-            val numberMessage = 1
-            val countDirectMessage = directMessages.count()
-            directMessages[countDirectMessage - 1].notCheckedMessage += Message(idCompanion, numberMessage, message)
+            directMessages.add(DirectMessages(idCompanion, mutableListOf(Message(idCompanion, 1, message, false))))
             return true
         }
-        val numberMessage = directMessages[0].notCheckedMessage.count()
-        directMessages[0].notCheckedMessage += Message(idCompanion, numberMessage + 1, message)
+        val indexDirectMessage = directMessages.indexOfFirst { it.idCompanion == idCompanion }
+        val countMessageFilter = filteredMessages[0].message.count() + 1
+        directMessages[indexDirectMessage].message.add(Message(idCompanion, countMessageFilter, message, false))
         return true
     }
 
-    fun deleteCheckedMessage(idCompanion: Int, numberMessage: Int): Boolean {
+    fun deleteMessage(idCompanion: Int, numberMessage: Int): Boolean {
         val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
-        if (filteredMessages.isEmpty()) {
-            println("Direct message not found with $idCompanion")
-            return false
-        }
-        val indexFilteredMessage = directMessages.indexOf(filteredMessages[0])
-        val filteredCheckedMessages = filteredMessages[0].checkedMessage.filter { it.messageNumber == numberMessage }
-        if (filteredCheckedMessages.isEmpty()) {
-            println("Message not found with $numberMessage")
-            return false
-        }
-        directMessages[indexFilteredMessage].checkedMessage.removeAll(filteredCheckedMessages)
-        return true
+        filteredMessages.ifEmpty { throw DirectMessageNotFoundException("DirectMessage not found with $idCompanion") }
+        val indexDirectMessage = directMessages.indexOfFirst { it.idCompanion == idCompanion }
+        directMessages.asSequence()
+            .filter { it.idCompanion == idCompanion }
+            .run {
+                val filteredMessage =
+                    directMessages[indexDirectMessage].message.filter { it.messageNumber == numberMessage }
+                filteredMessage.ifEmpty { throw MessageNotFoundException("Message not found with $numberMessage") }
+                val indexMessage =
+                    directMessages[indexDirectMessage].message.indexOfFirst { it.messageNumber == numberMessage }
+                directMessages[indexDirectMessage].message.removeAt(indexMessage)
+                return true
+            }
     }
 
-    fun deleteNotCheckedMessage(idCompanion: Int, numberMessage: Int): Boolean {
-        val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
-        if (filteredMessages.isEmpty()) {
-            println("Direct message not found with $idCompanion")
-            return false
-        }
-        val indexFilteredMessage = directMessages.indexOf(filteredMessages[0])
-        val filteredCheckedMessages = filteredMessages[0].notCheckedMessage.filter { it.messageNumber == numberMessage }
-        if (filteredCheckedMessages.isEmpty()) {
-            println("Message not found with $numberMessage")
-            return false
-        }
-        directMessages[indexFilteredMessage].notCheckedMessage.removeAll(filteredCheckedMessages)
-        return true
-    }
-
-    fun editNotCheckedMessage(idCompanion: Int, numberMessage: Int, message: String): Boolean {
-        val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
-        if (filteredMessages.isEmpty()) {
-            println("Direct message not found with $idCompanion")
-            return false
-        }
-        val indexFilteredDirectMessage = directMessages.indexOf(filteredMessages[0])
-        val filteredCheckedMessages = filteredMessages[0].notCheckedMessage.filter { it.messageNumber == numberMessage }
-        if (filteredCheckedMessages.isEmpty()) {
-            println("Message not found with $numberMessage")
-            return false
-        }
-        val indexFilteredMessage =
-            directMessages[indexFilteredDirectMessage].notCheckedMessage.indexOf(filteredCheckedMessages[0])
-        directMessages[indexFilteredDirectMessage].notCheckedMessage[indexFilteredMessage] =
-            Message(idCompanion, numberMessage, message)
-        return true
-    }
-
-    fun editCheckedMessage(idCompanion: Int, numberMessage: Int, message: String): Boolean {
-        val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
-        if (filteredMessages.isEmpty()) {
-            println("Direct message not found with $idCompanion")
-            return false
-        }
-        val indexFilteredDirectMessage = directMessages.indexOf(filteredMessages[0])
-        val filteredCheckedMessages = filteredMessages[0].checkedMessage.filter { it.messageNumber == numberMessage }
-        if (filteredCheckedMessages.isEmpty()) {
-            println("Message not found with $numberMessage")
-            return false
-        }
-        val indexFilteredMessage =
-            directMessages[indexFilteredDirectMessage].checkedMessage.indexOf(filteredCheckedMessages[0])
-        directMessages[indexFilteredDirectMessage].checkedMessage[indexFilteredMessage] =
-            Message(idCompanion, numberMessage, message)
-        return true
+    fun editMessage(idCompanion: Int, numberMessage: Int, message: String): Boolean {
+        val filteredDirectMessage = directMessages.filter { it.idCompanion == idCompanion }
+        filteredDirectMessage.ifEmpty { throw DirectMessageNotFoundException("DirectMessage not found with $idCompanion") }
+        val indexDirectMessage = directMessages.indexOfFirst { it.idCompanion == idCompanion }
+        directMessages.asSequence()
+            .filter { it.idCompanion == idCompanion }
+            .let {
+                val filteredMessage = directMessages[0].message.filter { it.messageNumber == numberMessage }
+                filteredMessage.ifEmpty { throw MessageNotFoundException("Message not found with $numberMessage") }
+                val indexMessage =
+                    directMessages[indexDirectMessage].message.indexOfFirst { it.messageNumber == numberMessage }
+                directMessages[indexDirectMessage].message.removeAt(indexMessage)
+                directMessages[indexDirectMessage].message.add(
+                    indexMessage,
+                    Message(idCompanion, numberMessage, message, false)
+                )
+                return true
+            }
     }
 
     fun getUnreadChatsCount(): Int {
-        val filteredDirectMessages = directMessages.filter { it.notCheckedMessage.isNotEmpty() }
-        return filteredDirectMessages.count()
+        var count: Int = 0
+        directMessages.asSequence()
+            .filter { it.message.isNotEmpty() }
+            .forEach {
+                it.message.filter { it1 -> it1.isChecked }
+                if (it.message.isNotEmpty()) {
+                    count++
+                }
+            }
+        return count
     }
 
     fun getListOfRecentMessages(): MutableList<String> {
-        val result: MutableList<String> = mutableListOf()
-        if (directMessages.isEmpty()) {
-            println("Нет доступных чатов")
-        }
-        for (directMessages in directMessages) {
-            if (directMessages.notCheckedMessage.isNotEmpty()) {
-                val message = directMessages.notCheckedMessage.last()
-                result += message.message
+        val resultString: MutableList<String> = mutableListOf()
+        directMessages.asSequence()
+            .ifEmpty { throw DirectMessageNotFoundException("DirectMessage not found") }
+            .map { it.message }
+            .forEach {
+                resultString += if (it.isEmpty()) {
+                    "В чате ${it.last().idCompanion} нет сообщений"
+                } else {
+                    it.last().message
+                }
             }
-            if (directMessages.checkedMessage.isNotEmpty()) {
-                val message = directMessages.checkedMessage.last()
-                result += message.message
-            }
-        }
-        if (result.isEmpty()) {
-            println("Сообщений нет")
-        }
-        return result
+        return resultString
     }
 
     fun getListFromChat(idCompanion: Int, countMessage: Int): MutableList<Message> {
-        val result = mutableListOf<Message>()
-        val setCheckedMessage = mutableListOf<Message>()
         val filteredMessages = directMessages.filter { it.idCompanion == idCompanion }
-        if (filteredMessages.isEmpty()) {
-            println("Direct message not found with $idCompanion")
-            return result
+        filteredMessages.ifEmpty { throw DirectMessageNotFoundException("DirectMessage not found with $idCompanion") }
+        val indexDirectMessage = directMessages.indexOfFirst { it.idCompanion == idCompanion }
+        val countMessagesIdCompanion = directMessages[indexDirectMessage].message.count()
+        val newCount = if (countMessagesIdCompanion < countMessage) {
+            0
+        } else {
+            countMessage
         }
-        if ((filteredMessages[0].checkedMessage.isEmpty()) && filteredMessages[0].notCheckedMessage.isEmpty()) {
-            print("Сообщений нет")
-            return result
+        val result = directMessages.asSequence()
+            .filter { it.idCompanion == idCompanion }
+            .single()
+            .message.drop(countMessagesIdCompanion - newCount).toMutableList()
+        directMessages[indexDirectMessage].message.removeAll(result)
+        result.forEach {
+            directMessages[indexDirectMessage].message.remove(it)
+            directMessages[indexDirectMessage].message.add(it.copy(isChecked = true))
         }
-        if (filteredMessages[0].notCheckedMessage.count() >= countMessage) {
-            val notCheckedMessageDrop =
-                filteredMessages[0].notCheckedMessage.drop(filteredMessages[0].notCheckedMessage.count() - countMessage)
-            val notCheckedMessageDropMutable = notCheckedMessageDrop.toMutableList()
-            setCheckedMessage += notCheckedMessageDropMutable
-            directMessages[directMessages.indexOf(filteredMessages[0])].checkedMessage.addAll(setCheckedMessage)
-            directMessages[directMessages.indexOf(filteredMessages[0])].notCheckedMessage.removeAll(setCheckedMessage)
-            result += notCheckedMessageDropMutable
-            return result
-        }
-        if (filteredMessages[0].notCheckedMessage.isEmpty()) {
-            try {
-                if (filteredMessages[0].checkedMessage.count() <= countMessage) {
-                    val checkedMessageDrop =
-                        filteredMessages[0].checkedMessage.drop(filteredMessages[0].checkedMessage.count() - countMessage)
-                    val checkedMessageDropMutable = checkedMessageDrop.toMutableList()
-                    result += checkedMessageDropMutable
-                    return result
-                }
-            } catch (e: IllegalArgumentException) {
-                result += filteredMessages[0].checkedMessage
-                println("Доступно только ${result.count()} сообщений")
-                return result
-            }
-        }
-        directMessages[directMessages.indexOf(filteredMessages[0])].checkedMessage.addAll(
-            (filteredMessages[0].checkedMessage.count() - 1),
-            (filteredMessages[0]).notCheckedMessage
-        )
-        directMessages[directMessages.indexOf(filteredMessages[0])].notCheckedMessage.clear()
-        try {
-            val checkedMessageDrop =
-                filteredMessages[0].checkedMessage.drop(filteredMessages[0].checkedMessage.count() - countMessage)
-            val checkedMessageDropMutable = checkedMessageDrop.toMutableList()
-            result += checkedMessageDropMutable
-            return result
-        } catch (e: IllegalArgumentException) {
-            result += filteredMessages[0].checkedMessage
-            println("Доступно только ${result.count()} сообщений")
-            return result
-        }
+        return result
     }
 
     fun add(post: Post): Post {
